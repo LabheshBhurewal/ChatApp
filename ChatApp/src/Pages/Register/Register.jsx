@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, storage, db } from "../../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, setDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,Link } from "react-router-dom";
 
 const Register = () => {
   // const fileInputRef = useRef(null); // Create a ref for the file input
@@ -65,6 +65,7 @@ const Register = () => {
           <input
             required
             type="file"
+            style={{display:"none"}}
             // ref={fileInputRef}
             id="file"
             name="file"
@@ -76,7 +77,7 @@ const Register = () => {
           <button>Sign up</button>
           {err && <span>Something went Wrong</span>}
         </form>
-        <p>You do have an account ? Login</p>
+        <p>You do have an account? <Link to="/login">Login</Link></p>
       </div>
     </div>
   );

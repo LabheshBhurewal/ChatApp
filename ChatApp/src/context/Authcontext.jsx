@@ -19,8 +19,8 @@ export const AuthContextProvider= ({children})=>{
     },[]);
 
     return(
-    <AuthContextProvider value={{currentUser}}>
+    <AuthContext.Provider value={{currentUser}}>
         {children}
-    </AuthContextProvider>
+    </AuthContext.Provider>
     )
 }
