@@ -1,6 +1,22 @@
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
+import { AuthContext } from '../../context/Authcontext'
+import { onSnapshot } from 'firebase/firestore'
 
 const Chats = () => {
+    const [chats,setChats]=useState([])
+    const currentUser=useContext(AuthContext)
+
+    useEffect(()=>{
+        const getchats =()=>{
+        const unsub = onSnapshot(doc(db, "userschat", currentUser.uid), (doc) => {
+            setChats(doc(data));
+        });
+
+        return ()=>{
+           unsub();
+        }
+        }
+    },[currentUser.uid])
   return (
     <div className='Chats'>
          <div className="userChat">
