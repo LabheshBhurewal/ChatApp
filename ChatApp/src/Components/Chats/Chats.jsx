@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../../context/Authcontext'
-import { onSnapshot } from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '../../firebase'
 
 const Chats = () => {
     const [chats,setChats]=useState([])
-    const currentUser=useContext(AuthContext)
+    const currentUser = useContext(AuthContext)
 
     useEffect(()=>{
         const getchats =()=>{
@@ -16,7 +17,9 @@ const Chats = () => {
            unsub();
         }
         }
-    },[currentUser.uid])
+        currentUser.uid && getchats()
+    },[currentUser.uid]);
+    console.log(chats);
   return (
     <div className='Chats'>
          <div className="userChat">
