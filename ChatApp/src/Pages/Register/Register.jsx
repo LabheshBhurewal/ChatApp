@@ -1,54 +1,70 @@
-import React, { useRef, useState } from "react"; // Import useRef
+import { useState } from "react";
+// import "./Register.scss";
 import Addavatar from "../../img/addAvatar.png";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { Link ,useNavigate } from "react-router-dom";
+
+// Firebase
 import { auth, storage, db } from "../../firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { doc, setDoc } from "firebase/firestore";
-import { useNavigate,Link } from "react-router-dom";
+import { collection, addDoc ,setDoc ,doc } from "firebase/firestore";
 
 const Register = () => {
-  // const fileInputRef = useRef(null); // Create a ref for the file input
-  const [err, setError] = useState(false);
-  const navigate =useNavigate()
-  const handleSubmit = async (e) => {
+  const [err, setErr] = useState(false);
+  const [name, setName] = useState("");
+  const [file, setFile] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate()
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    const displayName = e.target[0].value;
-    const email = e.target[1].value;
-    const password = e.target[2].value;
-    const file = e.target[3].files[0]; // Access file using ref
-
+    setErr(false);
     try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-
-      const storageRef = ref(storage, displayName);
-
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      
-      uploadTask.on(
-        (error) => {
-          setError(true);
-          
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-            await updateProfile(res.user, {
-              displayName,
-              photoURL: downloadURL,
-            });
-            await setDoc(doc(db, "users", res.user.uid), {
-              uid: res.user.uid,
-              displayName,
-              email,
-              photoURL: downloadURL,
-            });
-            await setDoc(doc(db,"userschat",res.user.uid),{})
-            navigate("/")
-          });
-        }
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-    } catch(err) {
-      setError(true);
+
+      if (file) {
+        const storageRef = ref(storage, name);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on(
+          "state_changed",
+          null,
+          (error) => {
+            console.error("Error uploading image: ", error);
+          },
+          async () => {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            await updateProfile(user, {
+              displayName: name,
+              photoURL: url,
+            });
+            await setDoc(doc(db, "users", user.uid), {
+              uid: user.uid,
+              displayName: name,
+              photoURL: url,
+            });
+            await setDoc(doc(db, "userschat", user.uid), {});
+            navigate("/")
+          }
+        );
+      } else {
+        await updateProfile(user, {
+          displayName: name,
+        });
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          displayName: name,
+        });
+        await setDoc(doc(db, "userschat", user.uid), {});
+        navigate("/")
+      }
+    } catch (error) {
+      console.error("Error signing up: ", error);
+      setErr(true);
     }
   };
 
@@ -57,27 +73,42 @@ const Register = () => {
       <div className="formWrapper">
         <span className="logo">Lama Chat</span>
         <span className="title">Register</span>
-        <form onSubmit={handleSubmit}>
-          <input required type="text" placeholder="display name" />
-          <input required type="email" placeholder="email" />
-          <input required type="password" placeholder="password" />
-          {/* Use ref to access file input */}
+        <form>
           <input
             required
-            type="file"
-            style={{display:"none"}}
-            // ref={fileInputRef}
-            id="file"
-            name="file"
+            type="text"
+            placeholder="display name"
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            required
+            type="email"
+            placeholder="email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            required
+            type="password"
+            placeholder="password"
+            onChange={(e) => setPassword(e.target.value)}
           />
           <label htmlFor="file">
-            <img src={Addavatar} alt="" />
+            <img src={Addavatar} alt="Add avatar" />
             <span>Add an avatar</span>
           </label>
-          <button>Sign up</button>
+          <input
+            type="file"
+            id="file"
+            name="file"
+            style={{ display: "none" }}
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+          <button onClick={handleSignUp}>Sign up</button>
           {err && <span>Something went Wrong</span>}
         </form>
-        <p>You do have an account? <Link to="/login">Login</Link></p>
+        <p>
+          You do have an account? <Link to="/login">Login</Link>
+        </p>
       </div>
     </div>
   );
