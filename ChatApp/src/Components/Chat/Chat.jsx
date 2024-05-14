@@ -8,7 +8,8 @@ import { ChatContext } from '../../context/Chatcontext'
 
 
 const Chat = () => {
-  const { data } = useContext(ChatContext)
+  const  { data } = useContext(ChatContext)
+  console.log(data) 
   return (
     <div className='Chat'>
     <div className="chatInfo">
