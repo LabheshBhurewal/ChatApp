@@ -1,4 +1,5 @@
-import React, { useContext, useState } from "react";
+
+import React, { useContext, useState, useEffect } from "react";
 import {
   collection,
   query,
@@ -12,12 +13,14 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { AuthContext } from "../../context/Authcontext";
+import { ChatContext } from "../../context/Chatcontext";
 
 const Search = () => {
   const [username, setUsername] = useState("");
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({});
   const [err, setErr] = useState(false);
-
+  
+  const { dispatch } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
 
   const handleSearch = async () => {
@@ -25,7 +28,7 @@ const Search = () => {
       collection(db, "users"),
       where("displayName", "==", username)
     );
-
+  
     try {
       const querySnapshot = await getDocs(q);
       setErr(false); // Reset error state on successful search
@@ -36,10 +39,8 @@ const Search = () => {
       setErr(true);
     }
   };
-
-  const handleKey = (e) => {
-    e.code === "Enter" && handleSearch();
-  };
+  
+  
 
   const handleSelect = async () => {
     const combinedId =
@@ -73,9 +74,8 @@ const Search = () => {
     } catch (err) {
       console.error("Error creating chat:", err);
     }
-
-    setUser(null);
-    setUsername("");
+    console.log(user)
+    dispatch({ type: "CHANGE_USER", payload: user });
   };
 
   return (
@@ -84,8 +84,8 @@ const Search = () => {
         <input
           type="text"
           placeholder="Find a user"
-          onKeyDown={handleKey}
-          onChange={(e) => setUsername(e.target.value)}
+          
+          onChange={(e) => {setUsername(e.target.value); handleSearch();}}
           value={username}
         />
       </div>
