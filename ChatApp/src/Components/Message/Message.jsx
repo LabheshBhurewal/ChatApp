@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import { ChatContext } from '../../context/Chatcontext'
 import { AuthContext } from '../../context/Authcontext'
 
-const Message = (message) => {
+const Message = ({message}) => {
   const { currentUser } =useContext(AuthContext)
   const { data } = useContext(ChatContext)
   console.log(message.text)

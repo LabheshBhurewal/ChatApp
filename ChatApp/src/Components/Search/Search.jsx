@@ -18,7 +18,7 @@ const Search = () => {
   const [username, setUsername] = useState("");
   const [user, setUser] = useState({});
   const [err, setErr] = useState(false);
-  
+
   const { dispatch } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
 
@@ -27,7 +27,7 @@ const Search = () => {
       collection(db, "users"),
       where("displayName", "==", username)
     );
-  
+
     try {
       const querySnapshot = await getDocs(q);
       setErr(false); // Reset error state on successful search
@@ -38,8 +38,6 @@ const Search = () => {
       setErr(true);
     }
   };
-  
-  
 
   const handleSelect = async () => {
     const combinedId =
@@ -49,31 +47,46 @@ const Search = () => {
     try {
       const res = await getDoc(doc(db, "chats", combinedId));
 
-      if (!res.exists) { // corrected invocation of exists()
+      if (!res.exists()) {
+        // corrected invocation of exists()
         await setDoc(doc(db, "chats", combinedId), { messages: [] });
-
-        await updateDoc(doc(db, "userschat", currentUser.uid), {
-          [combinedId + ".userInfo"]: {
-            uid: user.uid,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-          },
-          [combinedId + ".date"]: serverTimestamp(),
-        });
-
-        await updateDoc(doc(db, "userschat", user.uid), {
-          [combinedId + ".userInfo"]: {
-            uid: currentUser.uid,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-          },
-          [combinedId + ".date"]: serverTimestamp(),
-        });
+        const currentuserchat = await getDoc(
+          doc(db, "userschat", currentUser.uid)
+        );
+        if (!currentuserchat.exists()) {
+          await setDoc(
+            doc(db, "userschat", currentUser.uid),
+            {
+              [combinedId + ".userInfo"]: {
+                uid: user.uid,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+              },
+              [combinedId + ".date"]: serverTimestamp(),
+            },
+            { merge: true }
+          ); // Use merge option to avoid overwriting existing data
+        }
+        const userchat = await getDoc(doc(db, "userschat", user.uid));
+        if (!userchat.exists()) {
+          await setDoc(
+            doc(db, "userschat", user.uid),
+            {
+              [combinedId + ".userInfo"]: {
+                uid: currentUser.uid,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+              },
+              [combinedId + ".date"]: serverTimestamp(),
+            },
+            { merge: true }
+          ); // Use merge option to avoid overwriting existing data
+        }
       }
     } catch (err) {
       console.error("Error creating chat:", err);
     }
-    console.log(user)
+    console.log(user);
     dispatch({ type: "CHANGE_USER", payload: user });
   };
 
@@ -83,8 +96,10 @@ const Search = () => {
         <input
           type="text"
           placeholder="Find a user"
-          
-          onChange={(e) => {setUsername(e.target.value); handleSearch();}}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            handleSearch();
+          }}
           value={username}
         />
       </div>
